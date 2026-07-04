@@ -1,0 +1,60 @@
+{
+  "name": "LSI Navy Teal",
+  "dataColors": [
+    "#0E84AB",
+    "#F0A202",
+    "#2FAE62",
+    "#D64550",
+    "#073C54",
+    "#4A6C7A",
+    "#85A0AB",
+    "#BDEAFD"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#052E42",
+  "tableAccent": "#0E84AB",
+  "good": "#2FAE62",
+  "neutral": "#F0A202",
+  "bad": "#D64550",
+  "maximum": "#073C54",
+  "center": "#BDEAFD",
+  "minimum": "#0E84AB",
+  "null": "#85A0AB",
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#FFFFFF" } }, "transparency": 0 }],
+        "border": [{ "show": true, "color": { "solid": { "color": "#DBE7EC" } }, "radius": 8 }],
+        "outspacePane": [{ "backgroundColor": { "solid": { "color": "#EEF3F6" } } }]
+      }
+    },
+    "card": {
+      "*": {
+        "labels": [{ "color": { "solid": { "color": "#052E42" } }, "fontSize": 28, "bold": true }],
+        "categoryLabels": [{ "color": { "solid": { "color": "#4A6C7A" } }, "fontSize": 11 }]
+      }
+    },
+    "multiRowCard": {
+      "*": {
+        "card": [{ "outlineColor": { "solid": { "color": "#DBE7EC" } }, "outlineWeight": 1 }]
+      }
+    },
+    "gauge": {
+      "*": {
+        "dataColors": [{ "fillColor": { "solid": { "color": "#0E84AB" } } }],
+        "targetValues": [{ "color": { "solid": { "color": "#D64550" } } }],
+        "calloutValue": [{ "color": { "solid": { "color": "#052E42" } }, "fontSize": 28 }]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#EEF3F6" } }, "transparency": 0 }]
+      }
+    }
+  },
+  "textClasses": {
+    "title": { "fontSize": 14, "fontFace": "Segoe UI Semibold", "color": "#052E42" },
+    "label": { "fontSize": 10.5, "fontFace": "Segoe UI", "color": "#4A6C7A" },
+    "callout": { "fontSize": 28, "fontFace": "Segoe UI Semibold", "color": "#052E42" }
+  }
+}

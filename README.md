@@ -11,24 +11,39 @@ single file, so it also works fully offline.
 
 ## What it shows
 
-A dense grid of small, single-purpose visualizations rather than one long report:
+Styled as a navy/teal corporate BI template (sidebar navigation, pill-style slicers,
+white KPI cards) with the same content and forecast engine as before:
 
-- **Radial gauge + KPI tiles** — current LSI, forecast at the selected horizon, and
-  the estimated date the system crosses your action threshold.
-- **LSI trajectory chart** — historical trend (diverging area: blue below balance,
-  red above) with a dashed AI-forecast continuation and a 95% projection band.
-- **Scale-tendency distribution** — a Likert-style diverging bar showing what share
-  of days fell into each corrosive/balanced/scale-forming band.
+- **Sidebar navigation** — Overview / Trend & Forecast / Driver Analysis / Data
+  Source, with scroll-spy highlighting and smooth-scroll on click.
+- **KPI card row** — Current LSI, 30-day trend, forecast at the selected horizon, the
+  estimated date the system crosses your action threshold, and data coverage.
+- **LSI trajectory chart** — historical trend (diverging area: teal below balance,
+  amber above) with a dashed AI-forecast continuation and a 95% projection band.
+- **Current scale-tendency gauge** — a radial gauge (teal → neutral → amber zones)
+  showing where today's reading sits between corrosive and scale-forming.
 - **Driver correlation chart** — ranks temperature, TDS, pH, calcium, alkalinity and
   flow by how strongly each moves with LSI.
-- **Monthly LSI heatmap** — year × month grid, colored by average LSI, for spotting
-  seasonal or long-run drift at a glance.
+- **Average LSI by month** — a labeled trend line across the full history, for
+  spotting seasonal or long-run drift at a glance.
+- **Days by scale-tendency classification** — a vertical bar chart of how many days
+  fell into each corrosive/balanced/scale-forming band.
 - **Temperature vs. LSI scatter** — every reading plotted and colored on the same
   corrosive→scale-forming scale as the other charts.
 - **Driver sparklines** — compact trend + forecast strip for every input parameter.
 
 All charts share one set of controls (historical range, forecast horizon, regression
 lookback, action threshold) and re-render together.
+
+## Also available: a native Power BI version
+
+Everything above is a self-contained webpage — no Power BI required. If you want a
+real `.pbix` report instead (or in addition), see **`POWERBI_GUIDE.md`**: it walks
+through importing `data/lsi_historical_data.xlsx`, applying `powerbi_theme.json`
+(the same navy/teal palette, as a real importable Power BI theme), and building each
+visual with the exact DAX measures — including a from-scratch DAX implementation of
+the Pearson correlation and linear-trend forecast used in the web version, since
+neither has a native Power BI equivalent.
 
 ## Live data
 
@@ -102,10 +117,15 @@ the inline script.
 
 - `index.html` — the entire dashboard (HTML, CSS, JS, demo dataset, and the vendored
   Excel parser).
-- `data/lsi_historical_data.json` — the demo dataset as standalone JSON, for reuse
-  outside the dashboard.
+- `data/lsi_historical_data.json` / `data/lsi_historical_data.xlsx` — the demo
+  dataset as standalone JSON and Excel, for reuse outside the dashboard (including
+  as the Power BI data source).
 - `vendor/xlsx.mini.min.js` — [SheetJS](https://sheetjs.com) Community Edition
   (Apache-2.0), used for `.xlsx`/`.xls` parsing.
+- `powerbi_theme.json` — importable Power BI report theme matching this dashboard's
+  navy/teal/amber palette.
+- `POWERBI_GUIDE.md` — step-by-step guide (with DAX) to rebuild this dashboard as a
+  native Power BI report.
 
 ## Disclaimer
 
