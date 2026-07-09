@@ -73,6 +73,26 @@ integration needs a backend to proxy the query and would replace `fetchAndParse(
 the inline script; the rest of the dashboard (forecast engine, charts, KPIs) is
 already decoupled from where `DATA` comes from and needs no changes to work with one.
 
+## Index selection: LSI is not the only tool, and not a corrosion index
+
+LSI's empirical `A` term is calibrated for waters under roughly **4,000 mg/L TDS**.
+Above that, LSI (and Puckorius/PSI, which shares the same term) is being
+extrapolated outside its validated range. The dashboard checks this on every
+load (**Data Quality & Index Validity** panel) and flags it prominently — the
+shipped demo dataset is actually a produced-water case at ~29,000 mg/L TDS,
+7× over that ceiling, specifically to keep this check honest rather than
+decorative. See `SCALE_PREDICTION_PLAN.md` for the full index-selection
+decision rule (LSI / PSI / Stiff-Davis / Oddo-Tomson / ion-activity SR) and why
+a Stiff-Davis or full speciation model (PHREEQC + Pitzer) is the correct tool
+for high-TDS/brine water, and is *not* implemented in this build.
+
+**LSI/PSI are CaCO₃ saturation indices, not corrosion-rate indices.** A negative
+value means no protective carbonate film forms — it says nothing about actual
+corrosion rate, which depends on dissolved O₂, chloride, sulfate, H₂S, flow
+velocity, and metallurgy. For a corrosivity screen, see the separate
+**Larson–Skold ratio** panel (Driver Analysis), which is never blended with the
+scaling gauge.
+
 ## LSI methodology
 
 ```
@@ -84,21 +104,67 @@ C = log10(Ca_mgL × 2.497) − 0.4      (Ca converted to CaCO3 equivalent)
 D = log10(Alkalinity_mgCaCO3)
 ```
 
-This is the standard Langelier Saturation Index formula used industry-wide for CaCO3
-scale/corrosion screening. It powers the live LSI recomputation and the mechanistic
-half of the forecast ensemble.
+This is the standard Langelier Saturation Index formula used industry-wide for
+CaCO3 scale screening. It powers the live LSI recomputation and the mechanistic
+half of the forecast ensemble. The dashboard also computes the **Puckorius
+Scale Index (PSI)** alongside it — same inputs, but using equilibrium pH
+(`pHeq = 1.465·log10(Alkalinity) + 4.54`) instead of measured pH, so it is
+less sensitive to a CO₂-degassed sample than LSI is.
 
 Scale-tendency bands (tune the in-app action threshold to your site's risk tolerance):
 
 | LSI range | Tendency |
 |---|---|
-| < −2.0 | Severe corrosion |
-| −2.0 to −0.5 | Corrosive |
-| −0.5 to 0 | Mildly corrosive / near-balanced |
+| < −2.0 | Severe under-saturation |
+| −2.0 to −0.5 | Under-saturated (no protective film) |
+| −0.5 to 0 | Mildly under-saturated / near-balanced |
 | 0 to 0.5 | Near-balanced, slightly scale-forming |
 | 0.5 to 1.0 | Moderate scale-forming |
 | 1.0 to 2.0 | High scale-forming |
 | > 2.0 | Severe scale-forming |
+
+## Data quality gate
+
+Every render runs a set of checks, surfaced in the **Data Quality & Index
+Validity** card — failures are shown with the reason, never silently
+swallowed:
+
+- **TDS validity** — is this water inside LSI/PSI's calibrated range?
+- **pH basis** — field / lab / reconstructed. CO₂ degassing between sampling
+  and the bench can shift pH 0.3–0.8 units, a 1-for-1 shift in LSI. Provide a
+  `pH_basis` column to record it; unspecified is flagged, not hidden.
+- **Temperature basis** — bulk or surface/skin. Scale nucleates at the
+  hottest wetted surface, not in the bulk fluid.
+- **Ion balance** — needs a full major-ion suite (Na, Mg, K, Cl, SO₄) beyond
+  what this build's schema captures; shown as unavailable rather than
+  faked.
+- **Unit basis** — explicit, non-negotiable: Ca as Ca²⁺ mg/L, Alkalinity as
+  mg/L CaCO₃, Cl⁻/SO₄²⁻/Ba²⁺/Sr²⁺ (if present) as mg/L ion.
+
+## Corrosivity and sulfate-mineral screening (optional columns)
+
+If your CSV/Excel includes `Chloride_mg_L` and `Sulfate_mg_L`, the
+**Corrosivity Screening (Larson–Skold)** panel activates automatically. If it
+includes `Sulfate_mg_L` plus `Barium_mg_L`/`Strontium_mg_L`, the **Sulfate
+Mineral Saturation Screening** panel computes saturation ratios (SR =
+[cation][SO₄]/Ksp) for gypsum (CaSO₄), celestite (SrSO₄), and barite (BaSO₄) —
+the failure mode a carbonate-only index will never warn you about (barite is
+effectively insoluble and drops out on mixing with even trace Ba²⁺). These
+constants are 25 °C literature values with no ionic-strength/activity
+correction — a screening proxy, not a substitute for PHREEQC/OLI speciation.
+The shipped demo dataset intentionally does **not** include these columns,
+since fabricating Ba/Sr/SO₄ numbers just to populate a chart is exactly the
+kind of false-confidence display this plan warns against.
+
+## Decision support and gauge uncertainty
+
+The gauge shows a shaded measurement-uncertainty band (Monte Carlo over
+assumed instrument uncertainty: pH ±0.10, T ±1 °C, Ca/Alk ±5%, TDS ±3%) around
+the point estimate, not just a needle. A **Decision Support** card computes
+real sensitivity levers from the actual `calcLSI` function (e.g. "reduce
+alkalinity 30% → LSI moves from X to Y") and states general treatment
+categories — never a dosing prescription; chemical selection stays with
+process engineers and the vendor.
 
 ## Forecast engine
 
@@ -113,6 +179,12 @@ operating data with seasonality or regime shifts would warrant swapping in a
 seasonal/ARIMA or sequence model instead — see `buildForecast()` / `findCrossing()` in
 the inline script.
 
+**Baseline gate.** The **Forecast vs. Baselines** card (Trend & Forecast section)
+backtests the ensemble model against a held-out window and compares its MAE to a
+persistence baseline (last value) and a seasonal-naive baseline (value 365 days
+prior). It states plainly whether the model actually beats both baselines —
+see `backtestForecastVsBaselines()` in the inline script.
+
 ## Files
 
 - `index.html` — the entire dashboard (HTML, CSS, JS, demo dataset, and the vendored
@@ -126,6 +198,27 @@ the inline script.
   navy/teal/amber palette.
 - `POWERBI_GUIDE.md` — step-by-step guide (with DAX) to rebuild this dashboard as a
   native Power BI report.
+- `SCALE_PREDICTION_PLAN.md` — the revised chemistry/architecture plan, reconciled
+  against what's actually built here (a static single-file app, not the
+  Electron/Python stack the original plan assumed), plus its own open questions
+  answered from this repo's real data.
+- `tests/chemistry.test.js` — extracts the live `calcLSI`/`calcPSI`/
+  `calcLarsonSkold`/`calcMineralSR`/`tdsValidityCheck` functions straight out of
+  `index.html` (zero duplication) and checks them against independently
+  computed oracle values. Run with `node tests/chemistry.test.js`.
+
+## Known limitations (see SCALE_PREDICTION_PLAN.md for full detail)
+
+- No PHREEQC/Pitzer speciation — this is a hand-rolled empirical-formula engine.
+  Correct for the demo's stated purpose (screening/trend awareness), not a
+  substitute for rigorous speciation on high-ionic-strength brine.
+- Ion balance and VFA (volatile fatty acid) correction are not computable from
+  this build's schema (no Na/Mg/K/VFA columns) — shown as unavailable, not faked.
+- Mineral saturation ratios are 25 °C screening values, not temperature- or
+  ionic-strength-corrected.
+- This is a static, client-side app — no Electron packaging, no SQLite
+  persistence, no Python sidecar/ML forecasting service. "Live" means polling a
+  reachable file URL.
 
 ## Disclaimer
 

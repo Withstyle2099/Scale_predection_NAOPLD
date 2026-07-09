@@ -9,7 +9,7 @@
   :root{
     --navy-900:#052e42; --navy-800:#073c54; --navy-700:#0a4a68;
     --teal-500:#0e84ab; --teal-200:#bdeafd; --amber-500:#f0a202;
-    --good:#2fae62; --warning:#f0a202; --serious:#e8823c; --critical:#d64550;
+    --good:#2f6db3; --warning:#f0a202; --serious:#e8823c; --critical:#d64550;
     --div-pos:#0e84ab; --div-neg:#f0a202; --div-mid:#dce8ec;
     --series-1:#0e84ab;
     --page:#eef3f6; --surface-1:#ffffff; --surface-2:#f5f9fa;
@@ -24,7 +24,7 @@
     --page:#071c28; --surface-1:#0d3247; --surface-2:#0a2a3b;
     --text-primary:#eaf6fb; --text-secondary:#9fc3d1; --text-muted:#5f8697;
     --grid:#153e51; --baseline:#1f4c60; --border:rgba(255,255,255,0.10);
-    --div-pos:#35b6dd; --div-neg:#ffb733; --div-mid:#1c4a5e; --series-1:#35b6dd;
+    --div-pos:#35b6dd; --div-neg:#ffb733; --div-mid:#1c4a5e; --series-1:#35b6dd; --good:#5aa9e6;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.4);
   }
   @media (prefers-color-scheme: dark){
@@ -99,6 +99,20 @@
   .badge.sev-critical{background:color-mix(in srgb, var(--critical) 16%, transparent); color:var(--critical);}
   .badge .dot.sev-good{background:var(--good);} .badge .dot.sev-warning{background:var(--warning);}
   .badge .dot.sev-serious{background:var(--serious);} .badge .dot.sev-critical{background:var(--critical);}
+
+  .dot{width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:4px; display:inline-block;}
+  .dot.sev-good{background:var(--good);} .dot.sev-warning{background:var(--warning);}
+  .dot.sev-serious{background:var(--serious);} .dot.sev-critical{background:var(--critical);}
+  .info-row{display:flex; align-items:flex-start; gap:8px; font-size:12.5px; color:var(--text-secondary); margin-bottom:7px; line-height:1.45;}
+  .info-row:last-child{margin-bottom:0;}
+  .info-row strong{color:var(--text-primary);}
+  .prov-strip{display:flex; flex-wrap:wrap; gap:8px 20px; font-size:12px; color:var(--text-secondary);}
+  .prov-strip .prov-item strong{display:block; color:var(--text-primary); font-size:12.5px;}
+  .prov-strip .prov-item{min-width:130px;}
+  .lever-row{border-top:1px solid var(--border); padding:9px 0; font-size:12.5px; color:var(--text-secondary); line-height:1.45;}
+  .lever-row:first-child{border-top:none; padding-top:0;}
+  .lever-row strong{color:var(--text-primary);}
+  .not-available{color:var(--text-muted); font-size:12.5px; font-style:italic;}
 
   .hero-card{margin-bottom:16px;}
   .hero-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:2px;}
@@ -224,6 +238,11 @@
     </div>
 
     <section id="sec-overview">
+      <div class="card" id="dataQualityCard" style="margin-bottom:16px;">
+        <div class="card-title">Data Quality &amp; Index Validity</div>
+        <div id="dataQualityBody"></div>
+      </div>
+
       <div class="kpi-row" id="kpiRow"></div>
 
       <div class="card hero-card">
@@ -232,6 +251,16 @@
           <div class="legend-row" id="mainLegend"></div>
         </div>
         <div class="chart-wrap" id="mainChartWrap"></div>
+      </div>
+
+      <div class="card" id="provenanceCard" style="margin-bottom:16px;">
+        <div class="card-title">Provenance</div>
+        <div id="provenanceBody"></div>
+      </div>
+
+      <div class="card" id="decisionSupportCard" style="margin-bottom:16px;">
+        <div class="card-title">Decision Support — Sensitivity Levers</div>
+        <div id="decisionSupportBody"></div>
       </div>
     </section>
 
@@ -257,6 +286,11 @@
         <div class="card-title">Days by Scale-Tendency Classification</div>
         <div class="chart-wrap" id="bandChartWrap"></div>
       </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">Forecast vs. Baselines</div>
+        <div id="baselineBody"></div>
+      </div>
     </section>
 
     <section id="sec-drivers">
@@ -264,11 +298,22 @@
         <div class="card">
           <div class="card-title">Temperature vs. LSI</div>
           <div class="chart-wrap" id="scatterWrap"></div>
-          <div class="colorbar"><span>Corrosive</span><span class="bar"></span><span>Scale-forming</span></div>
+          <div class="colorbar"><span>Under-saturated</span><span class="bar"></span><span>Scale-forming</span></div>
         </div>
         <div class="card">
           <div class="card-title">Water-Chemistry Driver Trends</div>
           <div class="small-multiples" id="smGrid"></div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Corrosivity Screening (Larson&ndash;Skold)</div>
+          <div id="larsonSkoldBody"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Sulfate Mineral Saturation Screening</div>
+          <div id="mineralSrBody"></div>
         </div>
       </div>
     </section>
@@ -300,8 +345,9 @@
     </section>
 
     <footer>
-      LSI = pH &minus; pHs via the standard Langelier equation. Bands: &lt;&minus;0.5 corrosive &middot; &minus;0.5&ndash;0 mildly corrosive &middot; 0&ndash;0.5 near-balanced &middot; 0.5&ndash;1.0 scale-forming &middot; &gt;1.0 high/severe scale-forming.
-      Engineering screening tool — validate against lab QA/QC before acting.
+      LSI = pH &minus; pHs via the standard Langelier equation. Bands: &lt;&minus;0.5 under-saturated &middot; &minus;0.5&ndash;0 mildly under-saturated &middot; 0&ndash;0.5 near-balanced &middot; 0.5&ndash;1.0 scale-forming &middot; &gt;1.0 high/severe scale-forming.
+      LSI and PSI describe CaCO₃ scale tendency only &mdash; they are <strong>not</strong> corrosion-rate indices. See the Larson&ndash;Skold ratio for corrosivity screening.
+      Engineering screening tool — validate against lab QA/QC before acting. Calc engine v<span id="engineVersionFoot"></span>.
     </footer>
 
   </main>
@@ -337,7 +383,8 @@ function dayIndex(date){ return Math.round(date.getTime() / DAY_MS); }
 
 function buildDemoData(){
   return RAW.rows.map(function(r){
-    return { date: parseDate(r[0]), temp: r[1], flow: r[2], ph: r[3], ca: r[4], alk: r[5], tds: r[6], lsiObserved: r[7] };
+    return { date: parseDate(r[0]), temp: r[1], flow: r[2], ph: r[3], ca: r[4], alk: r[5], tds: r[6], lsiObserved: r[7],
+      cl: null, so4: null, ba: null, sr: null, phBasis: null, tempBasis: null, analyst: null, sampleId: null };
   }).sort(function(a,b){ return a.date - b.date; });
 }
 
@@ -353,8 +400,13 @@ rebuildDerived();
 
 var DATA_SOURCE = { kind:'demo', label:'Demo dataset · '+DATA.length+' days', status:'static', url:null, intervalMs:0, timer:null };
 
+// CHEMISTRY-ENGINE:START (tests/chemistry.test.js extracts this block verbatim — keep markers in sync)
 /* ---------- Langelier Saturation Index ---------- */
+// LSI is a CaCO3 saturation index, NOT a corrosion-rate index (see Larson-Skold below for that).
 // Standard field formula: LSI = pH - pHs, Ca expressed as CaCO3 (mg Ca x 2.497)
+var ENGINE_VERSION = '2.0.0';
+var LSI_VALID_TDS_MGL = 4000; // empirical A-term ceiling; see decision-rule notes in README/plan
+
 function calcLSI(p){
   var A = (Math.log10(p.tds) - 1) / 10;
   var B = -13.12 * Math.log10(p.temp + 273) + 34.55;
@@ -364,14 +416,62 @@ function calcLSI(p){
   return p.ph - pHs;
 }
 
+// Puckorius Scale Index: uses equilibrium pH (derived from alkalinity) instead of measured pH,
+// so it is less sensitive to a CO2-degassed/reconstructed pH sample than LSI is. Same valid TDS range as LSI.
+function calcPSI(p){
+  var A = (Math.log10(p.tds) - 1) / 10;
+  var B = -13.12 * Math.log10(p.temp + 273) + 34.55;
+  var C = Math.log10(p.ca * 2.497) - 0.4;
+  var D = Math.log10(p.alk);
+  var pHs = (9.3 + A + B) - (C + D);
+  var pHeq = 1.465 * Math.log10(p.alk) + 4.54;
+  return 2 * pHs - pHeq;
+}
+
+function tdsValidityCheck(tds){
+  var over = tds > LSI_VALID_TDS_MGL;
+  return {
+    valid: !over,
+    tds: tds,
+    message: over
+      ? 'TDS is ' + Math.round(tds).toLocaleString() + ' mg/L — ' + (tds/LSI_VALID_TDS_MGL).toFixed(1) + '× above the ~' + LSI_VALID_TDS_MGL.toLocaleString() + ' mg/L ceiling LSI’s empirical A-term is calibrated for. LSI/PSI below are extrapolated outside their validated range and should be treated as directional only, not quantitatively defensible. A Stiff–Davis index or full ion-activity speciation (e.g. PHREEQC with the Pitzer database) is the correct tool for this water and is not implemented in this build — see the data-quality gate below.'
+      : 'TDS is within LSI/PSI’s calibrated range (≤ ' + LSI_VALID_TDS_MGL.toLocaleString() + ' mg/L).'
+  };
+}
+
+// Larson-Skold ratio: a corrosivity indicator, kept separate from and never blended with the scaling indices.
+function calcLarsonSkold(cl_mgl, so4_mgl, alk_mgl){
+  if ([cl_mgl, so4_mgl, alk_mgl].some(function(v){ return v==null || isNaN(v); })) return null;
+  var epmCl = cl_mgl / 35.45;
+  var epmSo4 = so4_mgl / 48.03;
+  var epmAlk = alk_mgl / 50.04;
+  if (epmAlk <= 0) return null;
+  var ls = (epmCl + epmSo4) / epmAlk;
+  var band = ls < 0.8 ? { key:'ls-low', label:'Chlorides/sulfates unlikely to disrupt protective film', severity:'good' }
+    : ls <= 1.2 ? { key:'ls-mid', label:'Elevated corrosion rates expected', severity:'warning' }
+    : { key:'ls-high', label:'High localized corrosion rates expected', severity:'critical' };
+  return { value: ls, band: band };
+}
+
+// Sulfate mineral saturation ratio screening: SR = [cation][SO4] / Ksp.
+// Ksp values below are literature 25C constants (approximate) and are NOT ionic-strength or
+// temperature corrected — this is a screening proxy, not a substitute for PHREEQC/OLI speciation.
+var MINERAL_KSP_25C = { caso4: 4.93e-5, srso4: 3.44e-7, baso4: 1.08e-10 };
+function molarFromMgl(mgl, molarMass){ return (mgl / 1000) / molarMass; }
+function calcMineralSR(cation_mgl, cation_molarMass, so4_mgl, mineralKey){
+  if ([cation_mgl, so4_mgl].some(function(v){ return v==null || isNaN(v); })) return null;
+  var ionProduct = molarFromMgl(cation_mgl, cation_molarMass) * molarFromMgl(so4_mgl, 96.06);
+  return ionProduct / MINERAL_KSP_25C[mineralKey];
+}
+
 var LSI_BANDS = [
-  { max: -2.0, key: 'severe-corrosion', short: 'Severe corrosion',      tiny:'Sev. corrosion', label: 'Severe corrosion / heavy under-saturation', severity: 'critical', direction: 'corrosive' },
-  { max: -0.5, key: 'corrosive',        short: 'Corrosive',             tiny:'Corrosive',       label: 'Corrosive tendency — no scale protection',   severity: 'serious',  direction: 'corrosive' },
-  { max: 0,    key: 'mild-corrosive',   short: 'Mildly corrosive',      tiny:'Mild corrosive',  label: 'Mildly corrosive / near-balanced',           severity: 'warning',  direction: 'corrosive' },
-  { max: 0.5,  key: 'balanced-scale',   short: 'Near-balanced',         tiny:'Near-balanced',   label: 'Near-balanced, slightly scale-forming',      severity: 'good',     direction: 'scale' },
-  { max: 1.0,  key: 'scale-forming',    short: 'Scale-forming',         tiny:'Scale-forming',   label: 'Moderate scale-forming tendency',            severity: 'warning',  direction: 'scale' },
-  { max: 2.0,  key: 'high-scale',       short: 'High scale-forming',    tiny:'High scale',       label: 'High scale-forming tendency',                severity: 'serious',  direction: 'scale' },
-  { max: Infinity, key: 'severe-scale', short: 'Severe scale-forming',  tiny:'Sev. scale',       label: 'Severe scale-forming — heavy CaCO₃ deposition likely', severity: 'critical', direction: 'scale' }
+  { max: -2.0, key: 'severe-corrosion', short: 'Severe under-saturation',   tiny:'Sev. under-sat.', label: 'Severe CaCO₃ under-saturation — heavy dissolving tendency', severity: 'critical', direction: 'corrosive' },
+  { max: -0.5, key: 'corrosive',        short: 'Under-saturated',           tiny:'Under-sat.',       label: 'Under-saturated — no protective CaCO₃ film forms',           severity: 'serious',  direction: 'corrosive' },
+  { max: 0,    key: 'mild-corrosive',   short: 'Mildly under-saturated',    tiny:'Mild under-sat.',  label: 'Mildly under-saturated / near-balanced',                     severity: 'warning',  direction: 'corrosive' },
+  { max: 0.5,  key: 'balanced-scale',   short: 'Near-balanced',             tiny:'Near-balanced',    label: 'Near-balanced, slightly scale-forming',                      severity: 'good',     direction: 'scale' },
+  { max: 1.0,  key: 'scale-forming',    short: 'Scale-forming',             tiny:'Scale-forming',    label: 'Moderate scale-forming tendency',                            severity: 'warning',  direction: 'scale' },
+  { max: 2.0,  key: 'high-scale',       short: 'High scale-forming',        tiny:'High scale',        label: 'High scale-forming tendency',                                severity: 'serious',  direction: 'scale' },
+  { max: Infinity, key: 'severe-scale', short: 'Severe scale-forming',      tiny:'Sev. scale',        label: 'Severe scale-forming — heavy CaCO₃ deposition likely',        severity: 'critical', direction: 'scale' }
 ];
 function classifyLSI(v){
   for (var i=0;i<LSI_BANDS.length;i++){ if (v <= LSI_BANDS[i].max) return LSI_BANDS[i]; }
@@ -380,6 +480,7 @@ function classifyLSI(v){
 function severityBadgeHTML(band, extraText){
   return '<span class="dot sev-'+band.severity+'"></span>' + (extraText||band.short||band.label);
 }
+// CHEMISTRY-ENGINE:END
 
 /* ---------- stats helpers ---------- */
 function mean(a){ var s=0; for(var i=0;i<a.length;i++) s+=a[i]; return s/a.length; }
@@ -800,7 +901,29 @@ function renderCorrelationChart(){
 }
 
 /* ---- radial gauge ---- */
-function renderGauge(value){
+function gaussianRandom(){
+  var u=0, v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+// Assumed instrument uncertainty (1-sigma) — not measured per-sample; documented assumption, see plan.
+var MEASUREMENT_UNCERTAINTY = { ph:0.10, tempC:1.0, caRelPct:0.05, alkRelPct:0.05, tdsRelPct:0.03 };
+function monteCarloLsiBand(point, n){
+  n = n || 400;
+  var samples = [];
+  for (var i=0;i<n;i++){
+    samples.push(calcLSI({
+      ph: point.ph + gaussianRandom()*MEASUREMENT_UNCERTAINTY.ph,
+      temp: point.temp + gaussianRandom()*MEASUREMENT_UNCERTAINTY.tempC,
+      ca: point.ca * (1 + gaussianRandom()*MEASUREMENT_UNCERTAINTY.caRelPct),
+      alk: point.alk * (1 + gaussianRandom()*MEASUREMENT_UNCERTAINTY.alkRelPct),
+      tds: point.tds * (1 + gaussianRandom()*MEASUREMENT_UNCERTAINTY.tdsRelPct)
+    }));
+  }
+  samples.sort(function(a,b){ return a-b; });
+  return { low: samples[Math.floor(n*0.025)], high: samples[Math.min(n-1, Math.ceil(n*0.975)-1)] };
+}
+
+function renderGauge(value, band){
   var container = document.getElementById('gaugeWrap');
   container.innerHTML = '';
   var W=200, H=118, cx=100, cy=106, r=86;
@@ -821,6 +944,11 @@ function renderGauge(value){
   zones.forEach(function(z){
     svg.appendChild(svgEl('path', {d:arcPath(angleFor(z.b), angleFor(z.a), r), stroke:z.color, 'stroke-width':16, fill:'none', 'stroke-linecap':'butt', opacity:0.9}));
   });
+  if (band){
+    var bLow = Math.max(domainMin, Math.min(domainMax, band.low));
+    var bHigh = Math.max(domainMin, Math.min(domainMax, band.high));
+    svg.appendChild(svgEl('path', {d:arcPath(angleFor(bLow), angleFor(bHigh), r-24), stroke:cssVar('--text-primary'), 'stroke-width':6, fill:'none', 'stroke-linecap':'round', opacity:0.35}));
+  }
   var needleAngle = angleFor(Math.max(domainMin, Math.min(domainMax, value)));
   var tip = pt(needleAngle, r-20);
   svg.appendChild(svgEl('line', {x1:cx, y1:cy, x2:tip.x.toFixed(2), y2:tip.y.toFixed(2), stroke:cssVar('--text-primary'), 'stroke-width':3.5, 'stroke-linecap':'round'}));
@@ -1055,10 +1183,17 @@ function renderScatter(){
 function renderKPIs(fcResult){
   var current = LAST.lsiObserved;
   var band = classifyLSI(current);
-  renderGauge(current);
-  document.getElementById('gaugeValue').textContent = fmtLSI(current);
+  var uBand = monteCarloLsiBand(LAST);
+  renderGauge(current, uBand);
+  document.getElementById('gaugeValue').innerHTML = fmtLSI(current) + '<div style="font-size:11px;font-weight:600;color:var(--text-muted); margin-top:2px;">measurement-uncertainty band: ' + fmtLSI(uBand.low) + ' to ' + fmtLSI(uBand.high) + '</div>';
   document.getElementById('gaugeBadge').className = 'badge sev-'+band.severity;
   document.getElementById('gaugeBadge').innerHTML = severityBadgeHTML(band);
+  renderDataQuality();
+  renderProvenance();
+  renderDecisionSupport();
+  renderLarsonSkold();
+  renderMineralSR();
+  renderBaselineComparison();
 
   var thirtyAgo = DATA[Math.max(0, DATA.length-31)].lsiObserved;
   var delta30 = current - thirtyAgo;
@@ -1083,6 +1218,123 @@ function renderKPIs(fcResult){
   }).join('');
 
   document.getElementById('asOfText').textContent = 'Data as of ' + fmtDateFull(LAST.date);
+}
+
+/* ==================================================================
+   data quality gate / provenance / decision support / corrosivity / minerals
+   ================================================================== */
+function renderDataQuality(){
+  var tdsCheck = tdsValidityCheck(LAST.tds);
+  var rows = [];
+  rows.push('<div class="info-row"><span class="dot sev-'+(tdsCheck.valid?'good':'critical')+'"></span><span>'+tdsCheck.message+'</span></div>');
+  rows.push('<div class="info-row"><span class="dot sev-'+(LAST.phBasis?'good':'warning')+'"></span><span><strong>pH basis:</strong> '+(LAST.phBasis||'unspecified')+(LAST.phBasis?'':' — CO&#8322; degassing between sampling and the bench can shift pH by 0.3&ndash;0.8 units, a 1-for-1 shift in LSI. Record field vs. lab vs. reconstructed pH.')+'</span></div>');
+  rows.push('<div class="info-row"><span class="dot sev-'+(LAST.tempBasis?'good':'warning')+'"></span><span><strong>Temperature basis:</strong> '+(LAST.tempBasis||'unspecified (assumed bulk)')+(LAST.tempBasis?'':' — scale nucleates at the hottest wetted surface; label whether readings are bulk or wall/skin temperature.')+'</span></div>');
+  rows.push('<div class="info-row"><span class="dot sev-warning"></span><span><strong>Ion balance check:</strong> unavailable — requires a full major-ion suite (Na&#8314;, Mg&sup2;&#8314;, K&#8314; in addition to Ca&sup2;&#8314;, Cl&#8315;, SO&#8324;&sup2;&#8315;, alkalinity). Not present in this dataset.</span></div>');
+  rows.push('<div class="info-row"><span class="dot sev-good"></span><span><strong>Unit basis:</strong> Ca reported as Ca&sup2;&#8314; mg/L (&times;2.497 to CaCO&#8323; equivalent internally); Alkalinity as mg/L CaCO&#8323;; Cl&#8315;/SO&#8324;&sup2;&#8315;/Ba&sup2;&#8314;/Sr&sup2;&#8314; (if present) as mg/L ion.</span></div>');
+  document.getElementById('dataQualityBody').innerHTML = rows.join('');
+}
+
+function renderProvenance(){
+  var indices = 'LSI + PSI';
+  if (LAST.cl!=null && LAST.so4!=null) indices += ' + Larson-Skold';
+  if (LAST.so4!=null) indices += ' + mineral SR';
+  document.getElementById('provenanceBody').innerHTML = '<div class="prov-strip">'+
+    '<div class="prov-item"><strong>'+(LAST.sampleId||'unspecified')+'</strong>Sample ID</div>'+
+    '<div class="prov-item"><strong>'+(LAST.phBasis||'unspecified')+'</strong>pH basis</div>'+
+    '<div class="prov-item"><strong>'+(LAST.tempBasis||'unspecified (bulk assumed)')+'</strong>Temperature basis</div>'+
+    '<div class="prov-item"><strong>'+indices+'</strong>Index(es) computed</div>'+
+    '<div class="prov-item"><strong>v'+ENGINE_VERSION+'</strong>Calc engine version</div>'+
+    '<div class="prov-item"><strong>'+(LAST.analyst||'unspecified')+'</strong>Analyst</div>'+
+    '<div class="prov-item"><strong>'+fmtDateFull(LAST.date)+'</strong>Sample date</div>'+
+  '</div>';
+}
+
+function renderDecisionSupport(){
+  var base = { temp: LAST.temp, ph: LAST.ph, ca: LAST.ca, alk: LAST.alk, tds: LAST.tds };
+  var baseLsi = calcLSI(base);
+  var alkDown30 = calcLSI(Object.assign({}, base, { alk: base.alk*0.7 }));
+  var tempDown8 = calcLSI(Object.assign({}, base, { temp: base.temp-8 }));
+  var caDown20 = calcLSI(Object.assign({}, base, { ca: base.ca*0.8 }));
+  var phDown = calcLSI(Object.assign({}, base, { ph: base.ph-0.2 }));
+  var rows = [];
+  rows.push('<div class="lever-row"><strong>Reduce alkalinity 30%:</strong> LSI moves from '+fmtLSI(baseLsi)+' &rarr; '+fmtLSI(alkDown30)+'.</div>');
+  rows.push('<div class="lever-row"><strong>Lower surface temperature 8&deg;C:</strong> LSI moves from '+fmtLSI(baseLsi)+' &rarr; '+fmtLSI(tempDown8)+'.</div>');
+  rows.push('<div class="lever-row"><strong>Reduce Ca&sup2;&#8314; hardness 20%:</strong> LSI moves from '+fmtLSI(baseLsi)+' &rarr; '+fmtLSI(caDown20)+'.</div>');
+  rows.push('<div class="lever-row"><strong>Lower pH by 0.2 (e.g. acid feed):</strong> LSI moves from '+fmtLSI(baseLsi)+' &rarr; '+fmtLSI(phDown)+'.</div>');
+  var sulfateAvailable = LAST.so4!=null;
+  var sulfateNote = sulfateAvailable
+    ? 'Sulfate mineral risk can be screened from this dataset — see the Sulfate Mineral Saturation panel; inhibition alone may be insufficient if a sulfate mineral is supersaturated, and ion exclusion / sulfate removal upstream may be required.'
+    : 'Sulfate mineral risk cannot be screened from this dataset — provide SO&#8324;&sup2;&#8315; plus Ba&sup2;&#8314;/Sr&sup2;&#8314; to enable.';
+  rows.push('<div class="lever-row">Carbonate scale (the LSI/PSI reading above) is generally amenable to threshold-inhibitor treatment. '+sulfateNote+'</div>');
+  rows.push('<div class="lever-row" style="font-style:italic; color:var(--text-muted);">These are computed sensitivities and general treatment categories, not dosing prescriptions. Chemical selection remains with process engineers and the vendor.</div>');
+  document.getElementById('decisionSupportBody').innerHTML = rows.join('');
+}
+
+function renderLarsonSkold(){
+  var el = document.getElementById('larsonSkoldBody');
+  var ls = calcLarsonSkold(LAST.cl, LAST.so4, LAST.alk);
+  if (!ls){ el.innerHTML = '<div class="not-available">Not available — requires Cl&#8315; and SO&#8324;&sup2;&#8315; columns, not present in the current dataset. Add columns such as "Chloride_mg_L" and "Sulfate_mg_L" to enable.</div>'; return; }
+  el.innerHTML = '<div class="info-row"><span class="dot sev-'+ls.band.severity+'"></span><span><strong>LS = '+ls.value.toFixed(2)+'</strong> &mdash; '+ls.band.label+'</span></div>'+
+    '<div class="info-row" style="font-style:italic;">Corrosivity indicator, independent of the LSI/PSI scaling indices above — never blend the two into one gauge.</div>';
+}
+
+function renderMineralSR(){
+  var el = document.getElementById('mineralSrBody');
+  if (LAST.so4==null){ el.innerHTML = '<div class="not-available">Not available — requires SO&#8324;&sup2;&#8315; (plus Ba&sup2;&#8314;/Sr&sup2;&#8314; for those specific minerals), not present in the current dataset.</div>'; return; }
+  var minerals = [
+    { key:'caso4', label:'CaSO&#8324; (gypsum/anhydrite)', ion: LAST.ca, mw:40.08 },
+    { key:'srso4', label:'SrSO&#8324; (celestite)', ion: LAST.sr, mw:87.62 },
+    { key:'baso4', label:'BaSO&#8324; (barite)', ion: LAST.ba, mw:137.33 }
+  ];
+  var rows = minerals.map(function(m){
+    var sr = calcMineralSR(m.ion, m.mw, LAST.so4, m.key);
+    if (sr==null) return '<div class="info-row"><span class="not-available">'+m.label+': cation not in dataset</span></div>';
+    var sev = sr<0.8 ? 'good' : sr<=1.0 ? 'warning' : 'critical';
+    return '<div class="info-row"><span class="dot sev-'+sev+'"></span><span><strong>'+m.label+':</strong> SR = '+sr.toFixed(2)+' ('+(sr>=1?'super-saturated':'under-saturated')+')</span></div>';
+  });
+  rows.push('<div class="info-row" style="font-style:italic;">Screening-level: 25&deg;C K<sub>sp</sub> constants, no ionic-strength/activity correction. Confirm with PHREEQC/OLI before treatment decisions.</div>');
+  el.innerHTML = rows.join('');
+}
+
+function backtestForecastVsBaselines(){
+  var holdoutDays = Math.min(90, Math.floor(DATA.length*0.2));
+  var splitIdx = DATA.length - holdoutDays;
+  if (holdoutDays < 14 || splitIdx < 30) return null;
+  var trainSlice = DATA.slice(0, splitIdx), testSlice = DATA.slice(splitIdx);
+  var xs = trainSlice.map(function(d){ return d.t; });
+  var models = {};
+  PARAM_KEYS.forEach(function(k){ models[k] = linreg(xs, trainSlice.map(function(d){ return d[k]; })); });
+  var lsiModel = linreg(xs, trainSlice.map(function(d){ return d.lsiObserved; }));
+  var lastTrain = trainSlice[trainSlice.length-1];
+  var ensembleErrs=[], persistErrs=[], seasonalErrs=[];
+  testSlice.forEach(function(d, i){
+    var t = lastTrain.t + i + 1;
+    var proj = {}; PARAM_KEYS.forEach(function(k){ proj[k] = models[k].slope*t + models[k].intercept; });
+    var ensemble = (calcLSI(proj) + (lsiModel.slope*t+lsiModel.intercept)) / 2;
+    ensembleErrs.push(Math.abs(ensemble - d.lsiObserved));
+    persistErrs.push(Math.abs(lastTrain.lsiObserved - d.lsiObserved));
+    var seasonalIdx = splitIdx + i - 365;
+    var seasonalVal = (seasonalIdx>=0 && seasonalIdx<DATA.length) ? DATA[seasonalIdx].lsiObserved : lastTrain.lsiObserved;
+    seasonalErrs.push(Math.abs(seasonalVal - d.lsiObserved));
+  });
+  function maeOf(a){ return a.reduce(function(x,y){return x+y;},0)/a.length; }
+  var maeEnsemble = maeOf(ensembleErrs), maePersist = maeOf(persistErrs), maeSeasonal = maeOf(seasonalErrs);
+  return { holdoutDays: testSlice.length, maeEnsemble: maeEnsemble, maePersist: maePersist, maeSeasonal: maeSeasonal,
+    beatsBaseline: maeEnsemble < Math.min(maePersist, maeSeasonal) };
+}
+
+function renderBaselineComparison(){
+  var el = document.getElementById('baselineBody');
+  var bt = backtestForecastVsBaselines();
+  if (!bt){ el.innerHTML = '<div class="not-available">Not enough history yet for a held-out backtest (need 90+ days beyond a 30+ day training window).</div>'; return; }
+  var verdict = bt.beatsBaseline
+    ? { sev:'good', text:'The ensemble model beats both baselines on held-out data — it ships.' }
+    : { sev:'critical', text:'The ensemble model does NOT beat the best baseline on held-out data. Per the Phase 6 gate, it should not ship as-is — treat the baseline as the more defensible forecast.' };
+  el.innerHTML = '<div class="info-row"><span class="dot sev-'+verdict.sev+'"></span><span>'+verdict.text+'</span></div>'+
+    '<div class="info-row"><strong>Held-out window:</strong>&nbsp;last '+bt.holdoutDays+' days</div>'+
+    '<div class="info-row"><strong>MAE — ensemble model:</strong>&nbsp;'+bt.maeEnsemble.toFixed(3)+'</div>'+
+    '<div class="info-row"><strong>MAE — persistence baseline:</strong>&nbsp;'+bt.maePersist.toFixed(3)+'</div>'+
+    '<div class="info-row"><strong>MAE — seasonal-naive baseline (t&minus;365d):</strong>&nbsp;'+bt.maeSeasonal.toFixed(3)+'</div>';
 }
 
 /* ==================================================================
@@ -1115,12 +1367,21 @@ var FIELD_SYNONYMS = {
   alk: ['alk','alkalinity','alkalinitymgl','alkalinityascaco3'],
   ca: ['ca','camgl','calcium','calciummgl','hardness'],
   flow: ['flow','flowrate','flowm3h','flowm3_h'],
-  lsi: ['lsi','lsiobserved','langelier','langeliersaturationindex']
+  lsi: ['lsi','lsiobserved','langelier','langeliersaturationindex'],
+  // Optional fields — enable Larson-Skold, mineral saturation, and data-quality-gate panels when present.
+  cl: ['cl','chloride','chloridemgl','clmgl'],
+  so4: ['so4','sulfate','sulfatemgl','so4mgl'],
+  ba: ['ba','barium','bariummgl','bamgl'],
+  sr: ['sr','strontium','strontiummgl','srmgl'],
+  phBasis: ['phbasis','phsource','phtype'],
+  tempBasis: ['tempbasis','temperaturebasis','tempsource'],
+  analyst: ['analyst','sampledby','labtech'],
+  sampleId: ['sampleid','limsid','sampleref']
 };
 function normHeader(s){ return String(s).toLowerCase().replace(/[^a-z0-9]/g,''); }
 function detectColumnMap(headerRow){
   var used = {}, map = {};
-  var order = ['date','ph','temp','tds','alk','ca','flow','lsi'];
+  var order = ['date','ph','temp','tds','alk','ca','flow','lsi','cl','so4','ba','sr','phBasis','tempBasis','analyst','sampleId'];
   order.forEach(function(field){
     var syns = FIELD_SYNONYMS[field];
     for (var i=0;i<headerRow.length;i++){
@@ -1155,7 +1416,17 @@ function rowsToData(headerMap, dataRows){
     var flow = headerMap.flow!=null ? parseFloat(r[headerMap.flow]) : NaN;
     var lsiObserved = headerMap.lsi!=null ? parseFloat(r[headerMap.lsi]) : NaN;
     if (isNaN(lsiObserved)) lsiObserved = calcLSI({temp:temp, ph:ph, ca:ca, alk:alk, tds:tds});
-    out.push({ date: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), temp:temp, flow:isNaN(flow)?0:flow, ph:ph, ca:ca, alk:alk, tds:tds, lsiObserved:lsiObserved });
+    var cl = headerMap.cl!=null ? parseFloat(r[headerMap.cl]) : NaN;
+    var so4 = headerMap.so4!=null ? parseFloat(r[headerMap.so4]) : NaN;
+    var ba = headerMap.ba!=null ? parseFloat(r[headerMap.ba]) : NaN;
+    var sr = headerMap.sr!=null ? parseFloat(r[headerMap.sr]) : NaN;
+    var phBasis = headerMap.phBasis!=null ? String(r[headerMap.phBasis]).trim() : '';
+    var tempBasis = headerMap.tempBasis!=null ? String(r[headerMap.tempBasis]).trim() : '';
+    var analyst = headerMap.analyst!=null ? String(r[headerMap.analyst]).trim() : '';
+    var sampleId = headerMap.sampleId!=null ? String(r[headerMap.sampleId]).trim() : '';
+    out.push({ date: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), temp:temp, flow:isNaN(flow)?0:flow, ph:ph, ca:ca, alk:alk, tds:tds, lsiObserved:lsiObserved,
+      cl:isNaN(cl)?null:cl, so4:isNaN(so4)?null:so4, ba:isNaN(ba)?null:ba, sr:isNaN(sr)?null:sr,
+      phBasis: phBasis||null, tempBasis: tempBasis||null, analyst: analyst||null, sampleId: sampleId||null });
   });
   out.sort(function(a,b){ return a.date-b.date; });
   if (out.length < 5) throw new Error('Only '+out.length+' valid row(s) parsed — need at least 5.');
@@ -1369,6 +1640,7 @@ function setupControls(){
   window.addEventListener('resize', debounce(renderAll, 150));
 }
 
+document.getElementById('engineVersionFoot').textContent = ENGINE_VERSION;
 setupControls();
 setupScrollSpy();
 renderAll();
